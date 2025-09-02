@@ -12,6 +12,7 @@ from werkzeug.utils import secure_filename
 from werkzeug.middleware.proxy_fix import ProxyFix
 from dotenv import load_dotenv
 from llm_handlers import OllamaLLMHandler
+from pydub import AudioSegment
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -98,9 +99,27 @@ def correct_grammar(text: str, lang: str, llm_choice: str):
 
     return text
 
+def convert_webm_to_wav(webm_path: str) -> str:
+    """Convert WebM audio to WAV format"""
+    try:
+        # Load WebM audio
+        audio = AudioSegment.from_file(webm_path, format="webm")
+        
+        # Convert to WAV
+        wav_path = webm_path.replace('.webm', '.wav')
+        audio.export(wav_path, format="wav", parameters=["-acodec", "pcm_s16le", "-ar", "16000"])
+        
+        return wav_path
+    except Exception as e:
+        raise Exception(f"Failed to convert WebM to WAV: {e}")
+
 def process_audio(audio_path: str, language: str, engine: str, llm_engine: str):
     """Process audio file for transcription and grammar correction"""
     try:
+        # Convert WebM to WAV if needed
+        if audio_path.lower().endswith('.webm'):
+            audio_path = convert_webm_to_wav(audio_path)
+        
         # Load audio file
         audio_data, sr = sf.read(audio_path)
         
@@ -212,9 +231,14 @@ def upload_audio():
         # Process the audio
         result = process_audio(filepath, language, engine, llm_engine)
         
-        # Clean up uploaded file
+        # Clean up uploaded file and any converted files
         try:
             os.remove(filepath)
+            # Also clean up any converted WAV file if original was WebM
+            if filepath.lower().endswith('.webm'):
+                wav_path = filepath.replace('.webm', '.wav')
+                if os.path.exists(wav_path):
+                    os.remove(wav_path)
         except:
             pass
         
