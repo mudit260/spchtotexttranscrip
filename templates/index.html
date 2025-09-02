@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Speech-to-Text Transcription</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Header -->
+        <header class="row">
+            <div class="col-12">
+                <nav class="navbar navbar-expand-lg navbar-dark bg-transparent">
+                    <div class="container-fluid">
+                        <a class="navbar-brand" href="#">
+                            <i class="fas fa-microphone-alt me-2"></i>
+                            SpeechTranscribe Pro
+                        </a>
+                        <div class="navbar-nav ms-auto">
+                            <span class="nav-link" id="status-indicator">
+                                <i class="fas fa-circle text-success me-1"></i>
+                                <span id="status-text">Ready</span>
+                            </span>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="row justify-content-center">
+            <div class="col-lg-10 col-xl-8">
+                <!-- Upload Section -->
+                <section class="upload-section">
+                    <div class="card shadow-lg border-0">
+                        <div class="card-body p-5">
+                            <h2 class="card-title text-center mb-4">
+                                <i class="fas fa-cloud-upload-alt me-2"></i>
+                                Upload Audio File
+                            </h2>
+                            
+                            <form id="uploadForm" enctype="multipart/form-data">
+                                <!-- Drag & Drop Area -->
+                                <div class="upload-area mb-4" id="uploadArea">
+                                    <div class="upload-content">
+                                        <i class="fas fa-file-audio upload-icon"></i>
+                                        <h4>Drag & Drop Audio File</h4>
+                                        <p class="text-muted mb-3">or click to browse</p>
+                                        <button type="button" class="btn btn-outline-primary" id="browseBtn">
+                                            <i class="fas fa-folder-open me-2"></i>Browse Files
+                                        </button>
+                                        <input type="file" id="audioFile" name="audio_file" accept=".wav,.mp3,.m4a,.ogg,.flac,.aac" style="display: none;">
+                                    </div>
+                                </div>
+
+                                <!-- File Info -->
+                                <div class="file-info d-none" id="fileInfo">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-file-audio me-2"></i>
+                                        <strong id="fileName"></strong>
+                                        <span id="fileSize" class="ms-2 text-muted"></span>
+                                    </div>
+                                </div>
+
+                                <!-- Configuration Options -->
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="language" class="form-label">
+                                            <i class="fas fa-language me-2"></i>Language
+                                        </label>
+                                        <select class="form-select" id="language" name="language">
+                                            <option value="en" selected>English</option>
+                                            <option value="fr">French</option>
+                                            <option value="es">Spanish</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="engine" class="form-label">
+                                            <i class="fas fa-cogs me-2"></i>Speech-to-Text Engine
+                                        </label>
+                                        <select class="form-select" id="engine" name="engine">
+                                            <option value="whisper_local" selected>Local Whisper</option>
+                                            <option value="openai_stt">OpenAI STT</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="llmEngine" class="form-label">
+                                            <i class="fas fa-robot me-2"></i>Grammar Correction
+                                        </label>
+                                        <select class="form-select" id="llmEngine" name="llm_engine">
+                                            <option value="ollama" selected>Ollama (Local)</option>
+                                            <option value="openai">OpenAI GPT</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3 d-flex align-items-end">
+                                        <button type="submit" class="btn btn-primary btn-lg w-100" id="submitBtn">
+                                            <i class="fas fa-play me-2"></i>Start Transcription
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Progress Section -->
+                <section class="progress-section d-none" id="progressSection">
+                    <div class="card shadow border-0 mt-4">
+                        <div class="card-body p-4">
+                            <h5 class="card-title">
+                                <i class="fas fa-spinner fa-spin me-2"></i>
+                                Processing Audio
+                            </h5>
+                            <div class="progress mb-3">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                     role="progressbar" style="width: 0%" id="progressBar">
+                                </div>
+                            </div>
+                            <p class="text-muted mb-0" id="progressText">Initializing...</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Results Section -->
+                <section class="results-section d-none" id="resultsSection">
+                    <div class="card shadow border-0 mt-4">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-check-circle me-2"></i>
+                                Transcription Complete
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Raw Transcription -->
+                            <div class="mb-4" id="rawTranscription">
+                                <h6 class="text-muted">Raw Transcription:</h6>
+                                <div class="bg-light p-3 rounded" id="rawText"></div>
+                            </div>
+
+                            <!-- Corrected Text -->
+                            <div class="mb-4">
+                                <h6 class="text-success">Corrected Text:</h6>
+                                <div class="bg-success bg-opacity-10 p-3 rounded border border-success" id="correctedText"></div>
+                            </div>
+
+                            <!-- Download Section -->
+                            <div class="text-center">
+                                <button class="btn btn-success btn-lg" id="downloadBtn">
+                                    <i class="fas fa-download me-2"></i>Download DOCX
+                                </button>
+                                <button class="btn btn-outline-primary btn-lg ms-2" id="newTranscriptionBtn">
+                                    <i class="fas fa-plus me-2"></i>New Transcription
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Error Section -->
+                <section class="error-section d-none" id="errorSection">
+                    <div class="card shadow border-0 border-danger mt-4">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Processing Error
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-danger mb-3" id="errorMessage"></p>
+                            <button class="btn btn-outline-primary" id="retryBtn">
+                                <i class="fas fa-redo me-2"></i>Try Again
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="row mt-5">
+            <div class="col-12">
+                <div class="text-center text-muted py-4">
+                    <p>&copy; 2025 SpeechTranscribe Pro. Powered by AI transcription technology.</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
