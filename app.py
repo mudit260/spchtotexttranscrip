@@ -90,7 +90,8 @@ def correct_grammar(text: str, lang: str, llm_choice: str):
                 messages=[
                     {"role": "system", "content": "You are a helpful assistant."},
                     {"role": "user", "content": prompt},
-                ]
+                ],
+                timeout=30
             )
             return response.choices[0].message.content.strip()
     except Exception as e:
@@ -150,6 +151,7 @@ def process_audio(audio_path: str, language: str, engine: str, llm_engine: str):
                         model="whisper-1",
                         file=audio_file,
                         language=language,
+                        timeout=60
                     )
                     raw_text = transcription.text.strip()
                 
@@ -165,6 +167,7 @@ def process_audio(audio_path: str, language: str, engine: str, llm_engine: str):
                         model="whisper-1",
                         file=audio_file,
                         language=language,
+                        timeout=60
                     )
                     raw_text = transcription.text.strip()
                 
@@ -207,14 +210,14 @@ def upload_audio():
     try:
         # Check if file was uploaded
         if 'audio_file' not in request.files:
-            return jsonify({"success": False, "error": "No file uploaded"})
+            return jsonify({"success": False, "error": "No file uploaded"}), 400
         
         file = request.files['audio_file']
         if file.filename == '':
-            return jsonify({"success": False, "error": "No file selected"})
+            return jsonify({"success": False, "error": "No file selected"}), 400
         
         if not allowed_file(file.filename):
-            return jsonify({"success": False, "error": "File type not allowed"})
+            return jsonify({"success": False, "error": "File type not allowed"}), 400
         
         # Get form parameters
         language = request.form.get('language', 'en')
@@ -245,7 +248,8 @@ def upload_audio():
         return jsonify(result)
         
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)})
+        logging.error(f"Upload error: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/download/<filename>')
 def download_file(filename):

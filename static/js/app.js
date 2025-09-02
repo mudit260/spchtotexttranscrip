@@ -350,6 +350,17 @@ class AudioTranscriber {
 
             this.updateProgress(70, 'Transcribing speech...');
 
+            // Check if response is successful
+            if (!response.ok) {
+                const errorText = await response.text();
+                try {
+                    const errorJson = JSON.parse(errorText);
+                    throw new Error(errorJson.error || `Server error: ${response.status}`);
+                } catch (parseError) {
+                    throw new Error(`Server error: ${response.status} - ${errorText.substring(0, 100)}`);
+                }
+            }
+
             const result = await response.json();
 
             this.updateProgress(90, 'Correcting grammar...');
