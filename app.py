@@ -28,7 +28,7 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB max file size
 UPLOAD_FOLDER = 'uploads'
 TRANSCRIPTION_FOLDER = 'transcriptions'
-ALLOWED_EXTENSIONS = {'wav', 'mp3', 'm4a', 'ogg', 'flac', 'aac'}
+ALLOWED_EXTENSIONS = {'wav', 'mp3', 'm4a', 'ogg', 'flac', 'aac', 'webm'}
 
 # Create directories if they don't exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -114,7 +114,6 @@ def process_audio(audio_path: str, language: str, engine: str, llm_engine: str):
             # Basic resampling - for production use librosa or scipy
             ratio = 16000 / sr
             new_length = int(len(audio_data) * ratio)
-            import numpy as np
             audio_data = np.interp(np.linspace(0, len(audio_data)-1, new_length), 
                                  np.arange(len(audio_data)), audio_data)
 

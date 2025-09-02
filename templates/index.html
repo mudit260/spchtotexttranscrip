@@ -47,7 +47,24 @@
                             </h2>
                             
                             <form id="uploadForm" enctype="multipart/form-data">
-                                <!-- Drag & Drop Area -->
+                                <!-- Input Method Selection -->
+                                <div class="row mb-4">
+                                    <div class="col-12">
+                                        <div class="btn-group w-100" role="group" aria-label="Input method">
+                                            <input type="radio" class="btn-check" name="inputMethod" id="fileInput" value="file" checked>
+                                            <label class="btn btn-outline-primary" for="fileInput">
+                                                <i class="fas fa-file-audio me-2"></i>Upload File
+                                            </label>
+                                            
+                                            <input type="radio" class="btn-check" name="inputMethod" id="micInput" value="microphone">
+                                            <label class="btn btn-outline-primary" for="micInput">
+                                                <i class="fas fa-microphone me-2"></i>Record from Microphone
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- File Upload Area -->
                                 <div class="upload-area mb-4" id="uploadArea">
                                     <div class="upload-content">
                                         <i class="fas fa-file-audio upload-icon"></i>
@@ -56,7 +73,32 @@
                                         <button type="button" class="btn btn-outline-primary" id="browseBtn">
                                             <i class="fas fa-folder-open me-2"></i>Browse Files
                                         </button>
-                                        <input type="file" id="audioFile" name="audio_file" accept=".wav,.mp3,.m4a,.ogg,.flac,.aac" style="display: none;">
+                                        <input type="file" id="audioFile" name="audio_file" accept=".wav,.mp3,.m4a,.ogg,.flac,.aac,.webm" style="display: none;">
+                                    </div>
+                                </div>
+
+                                <!-- Microphone Recording Area -->
+                                <div class="recording-area mb-4 d-none" id="recordingArea">
+                                    <div class="recording-content text-center">
+                                        <i class="fas fa-microphone recording-icon" id="recordingIcon"></i>
+                                        <h4 id="recordingTitle">Ready to Record</h4>
+                                        <p class="text-muted mb-3" id="recordingSubtitle">Click start to begin recording your voice</p>
+                                        
+                                        <div class="recording-controls mb-3">
+                                            <button type="button" class="btn btn-success btn-lg" id="startRecording">
+                                                <i class="fas fa-play me-2"></i>Start Recording
+                                            </button>
+                                            <button type="button" class="btn btn-danger btn-lg d-none" id="stopRecording">
+                                                <i class="fas fa-stop me-2"></i>Stop Recording
+                                            </button>
+                                        </div>
+                                        
+                                        <div class="recording-timer d-none" id="recordingTimer">
+                                            <span class="badge bg-danger fs-6">
+                                                <i class="fas fa-circle text-light me-2"></i>
+                                                <span id="timerDisplay">00:00</span>
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
 

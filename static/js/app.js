@@ -1,5 +1,9 @@
 class AudioTranscriber {
     constructor() {
+        this.mediaRecorder = null;
+        this.recordedChunks = [];
+        this.recordingTimer = null;
+        this.recordingStartTime = null;
         this.init();
         this.checkStatus();
     }
@@ -8,6 +12,7 @@ class AudioTranscriber {
         this.setupElements();
         this.setupEventListeners();
         this.setupDragAndDrop();
+        this.setupInputMethodToggle();
     }
 
     setupElements() {
@@ -32,7 +37,18 @@ class AudioTranscriber {
             errorMessage: document.getElementById('errorMessage'),
             retryBtn: document.getElementById('retryBtn'),
             statusIndicator: document.getElementById('status-text'),
-            rawTranscription: document.getElementById('rawTranscription')
+            rawTranscription: document.getElementById('rawTranscription'),
+            // Recording elements
+            fileInputRadio: document.getElementById('fileInput'),
+            micInputRadio: document.getElementById('micInput'),
+            recordingArea: document.getElementById('recordingArea'),
+            startRecording: document.getElementById('startRecording'),
+            stopRecording: document.getElementById('stopRecording'),
+            recordingTimer: document.getElementById('recordingTimer'),
+            timerDisplay: document.getElementById('timerDisplay'),
+            recordingTitle: document.getElementById('recordingTitle'),
+            recordingSubtitle: document.getElementById('recordingSubtitle'),
+            recordingIcon: document.getElementById('recordingIcon')
         };
     }
 
@@ -72,6 +88,170 @@ class AudioTranscriber {
         this.elements.uploadArea.addEventListener('click', () => {
             this.elements.audioFile.click();
         });
+
+        // Recording controls
+        this.elements.startRecording.addEventListener('click', () => {
+            this.startRecording();
+        });
+
+        this.elements.stopRecording.addEventListener('click', () => {
+            this.stopRecording();
+        });
+    }
+
+    setupInputMethodToggle() {
+        // Input method radio buttons
+        this.elements.fileInputRadio.addEventListener('change', () => {
+            if (this.elements.fileInputRadio.checked) {
+                this.switchToFileInput();
+            }
+        });
+
+        this.elements.micInputRadio.addEventListener('change', () => {
+            if (this.elements.micInputRadio.checked) {
+                this.switchToMicInput();
+            }
+        });
+    }
+
+    switchToFileInput() {
+        this.elements.uploadArea.classList.remove('d-none');
+        this.elements.recordingArea.classList.add('d-none');
+        this.resetRecording();
+    }
+
+    switchToMicInput() {
+        this.elements.uploadArea.classList.add('d-none');
+        this.elements.recordingArea.classList.remove('d-none');
+        this.elements.fileInfo.classList.add('d-none');
+        this.selectedFile = null;
+    }
+
+    async startRecording() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                audio: {
+                    sampleRate: 16000,
+                    channelCount: 1,
+                    echoCancellation: true,
+                    noiseSuppression: true
+                } 
+            });
+
+            this.mediaRecorder = new MediaRecorder(stream, {
+                mimeType: 'audio/webm;codecs=opus'
+            });
+
+            this.recordedChunks = [];
+
+            this.mediaRecorder.addEventListener('dataavailable', (event) => {
+                if (event.data.size > 0) {
+                    this.recordedChunks.push(event.data);
+                }
+            });
+
+            this.mediaRecorder.addEventListener('stop', () => {
+                this.processRecording();
+                stream.getTracks().forEach(track => track.stop());
+            });
+
+            this.mediaRecorder.start();
+            this.startRecordingUI();
+
+        } catch (error) {
+            console.error('Error accessing microphone:', error);
+            this.showError('Could not access microphone. Please check permissions.');
+        }
+    }
+
+    stopRecording() {
+        if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
+            this.mediaRecorder.stop();
+        }
+        this.stopRecordingUI();
+    }
+
+    startRecordingUI() {
+        this.elements.recordingArea.classList.add('recording');
+        this.elements.startRecording.classList.add('d-none');
+        this.elements.stopRecording.classList.remove('d-none');
+        this.elements.recordingTimer.classList.remove('d-none');
+        
+        this.elements.recordingTitle.textContent = 'Recording...';
+        this.elements.recordingSubtitle.textContent = 'Speak clearly into your microphone';
+        
+        // Start timer
+        this.recordingStartTime = Date.now();
+        this.recordingTimer = setInterval(() => {
+            const elapsed = Date.now() - this.recordingStartTime;
+            const minutes = Math.floor(elapsed / 60000);
+            const seconds = Math.floor((elapsed % 60000) / 1000);
+            this.elements.timerDisplay.textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }, 1000);
+
+        this.updateStatus('Recording', 'danger');
+    }
+
+    stopRecordingUI() {
+        this.elements.recordingArea.classList.remove('recording');
+        this.elements.startRecording.classList.remove('d-none');
+        this.elements.stopRecording.classList.add('d-none');
+        this.elements.recordingTimer.classList.add('d-none');
+        
+        this.elements.recordingTitle.textContent = 'Processing Recording...';
+        this.elements.recordingSubtitle.textContent = 'Converting your audio for transcription';
+        
+        if (this.recordingTimer) {
+            clearInterval(this.recordingTimer);
+            this.recordingTimer = null;
+        }
+
+        this.updateStatus('Processing', 'warning');
+    }
+
+    processRecording() {
+        const blob = new Blob(this.recordedChunks, { type: 'audio/webm' });
+        
+        // Create a file-like object from the blob
+        const recordedFile = new File([blob], `recording_${Date.now()}.webm`, {
+            type: 'audio/webm'
+        });
+
+        // Set the recorded file as the selected file and show info
+        this.selectedFile = recordedFile;
+        this.elements.fileName.textContent = recordedFile.name;
+        this.elements.fileSize.textContent = this.formatFileSize(recordedFile.size);
+        this.elements.fileInfo.classList.remove('d-none');
+        this.elements.submitBtn.disabled = false;
+
+        // Update UI
+        this.elements.recordingTitle.textContent = 'Recording Complete';
+        this.elements.recordingSubtitle.textContent = 'Ready to transcribe your audio';
+        this.updateStatus('Ready', 'success');
+    }
+
+    resetRecording() {
+        if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
+            this.mediaRecorder.stop();
+        }
+        
+        if (this.recordingTimer) {
+            clearInterval(this.recordingTimer);
+            this.recordingTimer = null;
+        }
+
+        this.elements.recordingArea.classList.remove('recording');
+        this.elements.startRecording.classList.remove('d-none');
+        this.elements.stopRecording.classList.add('d-none');
+        this.elements.recordingTimer.classList.add('d-none');
+        this.elements.timerDisplay.textContent = '00:00';
+        
+        this.elements.recordingTitle.textContent = 'Ready to Record';
+        this.elements.recordingSubtitle.textContent = 'Click start to begin recording your voice';
+        
+        this.recordedChunks = [];
+        this.mediaRecorder = null;
     }
 
     setupDragAndDrop() {
@@ -111,12 +291,12 @@ class AudioTranscriber {
 
         // Validate file type
         const allowedTypes = ['audio/wav', 'audio/mpeg', 'audio/mp3', 'audio/m4a', 
-                             'audio/ogg', 'audio/flac', 'audio/aac'];
+                             'audio/ogg', 'audio/flac', 'audio/aac', 'audio/webm'];
         const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
-        const allowedExtensions = ['.wav', '.mp3', '.m4a', '.ogg', '.flac', '.aac'];
+        const allowedExtensions = ['.wav', '.mp3', '.m4a', '.ogg', '.flac', '.aac', '.webm'];
 
         if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension)) {
-            this.showError('Please select a valid audio file (WAV, MP3, M4A, OGG, FLAC, AAC)');
+            this.showError('Please select a valid audio file (WAV, MP3, M4A, OGG, FLAC, AAC, WEBM)');
             return;
         }
 
@@ -258,6 +438,13 @@ class AudioTranscriber {
         this.elements.submitBtn.disabled = true;
         this.selectedFile = null;
         this.downloadFilename = null;
+
+        // Reset recording
+        this.resetRecording();
+
+        // Reset to file input mode
+        this.elements.fileInputRadio.checked = true;
+        this.switchToFileInput();
 
         // Hide all sections
         this.hideAllSections();
