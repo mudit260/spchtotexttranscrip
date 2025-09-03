@@ -505,6 +505,21 @@ class AudioTranscriber {
 // Initialize the application when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     new AudioTranscriber();
+    
+    // Add professional animations
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        setTimeout(() => {
+            card.classList.add('animate-slide-in');
+        }, index * 100);
+    });
+    
+    // Add status pulse effect
+    const statusDot = document.querySelector('#status-indicator .fas.fa-circle');
+    if (statusDot) {
+        statusDot.style.position = 'relative';
+        statusDot.classList.add('status-pulse');
+    }
 });
 
 // Add some visual enhancements
