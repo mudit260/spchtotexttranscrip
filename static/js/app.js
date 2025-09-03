@@ -129,6 +129,11 @@ class AudioTranscriber {
 
     async startRecording() {
         try {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                this.showError('Your browser does not support audio recording (getUserMedia unavailable).');
+                return;
+            }
+
             const stream = await navigator.mediaDevices.getUserMedia({ 
                 audio: {
                     sampleRate: 16000,
@@ -138,9 +143,23 @@ class AudioTranscriber {
                 } 
             });
 
-            this.mediaRecorder = new MediaRecorder(stream, {
-                mimeType: 'audio/webm;codecs=opus'
-            });
+            // Pick a supported mime type for MediaRecorder
+            const preferredTypes = [
+                'audio/webm;codecs=opus',
+                'audio/webm',
+                'audio/ogg;codecs=opus',
+                'audio/ogg'
+            ];
+            let selectedMimeType = '';
+            for (const type of preferredTypes) {
+                if (window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(type)) {
+                    selectedMimeType = type;
+                    break;
+                }
+            }
+
+            const recorderOptions = selectedMimeType ? { mimeType: selectedMimeType } : {};
+            this.mediaRecorder = new MediaRecorder(stream, recorderOptions);
 
             this.recordedChunks = [];
 
@@ -155,12 +174,21 @@ class AudioTranscriber {
                 stream.getTracks().forEach(track => track.stop());
             });
 
+            // Some browsers only emit data on stop; others can use timeslices.
+            // Start without timeslice to ensure we always get a final chunk.
             this.mediaRecorder.start();
             this.startRecordingUI();
 
         } catch (error) {
             console.error('Error accessing microphone:', error);
-            this.showError('Could not access microphone. Please check permissions.');
+            const isSecureContext = (window.isSecureContext || location.protocol === 'https:') || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+            const hint = isSecureContext ? '' : ' Recording requires HTTPS or localhost in most browsers.';
+            const message = (error && error.name === 'NotAllowedError')
+                ? 'Microphone access denied. Please allow microphone permissions in your browser.'
+                : (error && error.name === 'NotFoundError')
+                    ? 'No microphone found. Please connect a microphone and try again.'
+                    : 'Could not access microphone. Please check permissions and device settings.';
+            this.showError(message + hint);
         }
     }
 
@@ -211,11 +239,20 @@ class AudioTranscriber {
     }
 
     processRecording() {
-        const blob = new Blob(this.recordedChunks, { type: 'audio/webm' });
+        if (!this.recordedChunks || this.recordedChunks.length === 0) {
+            this.showError('No audio was captured. Please try recording again.');
+            this.resetRecording();
+            return;
+        }
+
+        // Use the mime type from the first chunk if available, else default to webm
+        const chunkType = this.recordedChunks[0] && this.recordedChunks[0].type ? this.recordedChunks[0].type : 'audio/webm';
+        const blob = new Blob(this.recordedChunks, { type: chunkType });
         
         // Create a file-like object from the blob
-        const recordedFile = new File([blob], `recording_${Date.now()}.webm`, {
-            type: 'audio/webm'
+        const extension = chunkType.includes('ogg') ? 'ogg' : 'webm';
+        const recordedFile = new File([blob], `recording_${Date.now()}.${extension}`, {
+            type: chunkType
         });
 
         // Set the recorded file as the selected file and show info
