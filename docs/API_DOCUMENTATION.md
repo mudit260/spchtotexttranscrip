@@ -1,7 +1,7 @@
 # Code API
 
 
-> **API Documentation** | Generated on 2026-03-10 15:58:05
+> **API Documentation** | Generated on 2026-03-13 12:48:34
 
 ---
 
@@ -12,20 +12,20 @@
 ## 1. Overview
 
 * **API Name:** Code API
-* **Purpose / Business Value:** Code API provides endpoints to upload audio for processing (transcription/LLM-driven processing) and to download generated documents. It accepts audio file uploads, processes them using selectable engines (e.g., whisper_local for speech-to-text and ollama as an LLM engine), and exposes generated DOCX files for download.
+* **Purpose / Business Value:** Provides a small file-processing API to accept audio uploads, run a transcription/workflow (using local Whisper and an LLM engine), and return generated documents. Includes a root health/metadata endpoint, an upload endpoint that accepts audio via multipart/form-data, and a download endpoint to retrieve generated DOCX files.
 * **Base URL:** `None`
 * **API Version:** v1
-* **Supported Formats:** multipart/form-data (for file upload), application/json (API responses), application/vnd.openxmlformats-officedocument.wordprocessingml.document (DOCX download)
+* **Supported Formats:** application/json, multipart/form-data (for file upload), application/vnd.openxmlformats-officedocument.wordprocessingml.document (DOCX binary download)
 * **Detected Frameworks:** Flask
 * **Total Endpoints:** 3
-* **Last Updated:** 2026-03-10 15:58:05
+* **Last Updated:** 2026-03-13 12:48:34
 
 ### Key Features
 
-* Upload audio files for speech-to-text and LLM processing
-* Select processing engines via form fields (e.g., engine, llm_engine)
+* Upload audio files for transcription/processing
+* Integrates with local Whisper engine and an LLM engine (e.g. Ollama) via form parameters
 * Download generated DOCX documents
-* Simple error responses in JSON when resources are missing or operations fail
+* Simple health/root endpoint
 
 ### Endpoint Distribution
 
@@ -39,8 +39,8 @@
 ## 2. Authentication & Authorization
 
 * **Authentication Type:** Token
-* **How to Obtain Credentials:** No authentication scheme detected in the provided code patterns. Endpoints appear to be publicly accessible.
-* **How to Pass Credentials:** Header
+* **How to Obtain Credentials:** This codebase contains no authentication patterns; no credentials or tokens are required by the detected endpoints.
+* **How to Pass Credentials:** None
 
 ### Authentication Endpoints
 
@@ -48,10 +48,10 @@
 * `POST /upload-audio` - Authentication
 * `GET /download/{filename}` - Authentication
 
-**Example Header:**
+**Example Query Parameter:**
 
 ```
-Authorization: Token <token>
+?api_key=Token <token>
 ```
 
 ---
@@ -62,9 +62,8 @@ The following headers are commonly used across all endpoints:
 
 | Header | Required | Description |
 |:-------|:--------:|:------------|
-| Content-Type | Yes | For POST /upload-audio use multipart/form-data; for file download the response uses the DOCX media type |
-| Accept | Optional | Preferred response format (e.g., application/json) |
-| Authorization | Optional | Not required — no auth detected. Present only if deployment adds auth later. |
+| Authorization | Optional | Not required by the detected code. Present only if you add authentication to the API. |
+| Content-Type | Yes | For upload endpoint: multipart/form-data; for JSON responses: application/json. For download responses: binary DOCX content type. |
 
 ---
 
@@ -73,8 +72,9 @@ The following headers are commonly used across all endpoints:
 | Status Code | Meaning |
 |:-----------:|:--------|
 | 200 | Success |
-| 400 | Bad Request (e.g., missing form fields or invalid input) |
-| 404 | Not Found (e.g., requested file does not exist) |
+| 400 | Bad Request (e.g. invalid input or missing form fields) |
+| 401 | Unauthorized (not used in current codebase) |
+| 404 | Not Found (e.g. requested file for download does not exist) |
 | 500 | Internal Server Error (unhandled exceptions during processing) |
 
 **Error Response Format:**
@@ -82,7 +82,7 @@ The following headers are commonly used across all endpoints:
 ```json
 {
   "status": 400,
-  "message": "Human-readable error message (e.g., \"File not found\")",
+  "message": "Error message (string) - used in code, e.g. {\"error\": \"File not found\"}",
   "data": null
 }
 ```
@@ -91,9 +91,9 @@ The following headers are commonly used across all endpoints:
 
 | Error Code | Description |
 |:----------:|:------------|
-| `FILE_NOT_FOUND` | Returned when a requested download filename does not exist. Implementation returns JSON {"error": "File not found"} with HTTP 404. |
-| `VALIDATION_ERROR` | Input validation failed (missing file, unsupported form fields, etc.) |
-| `PROCESSING_ERROR` | Server-side error during audio processing or file generation. |
+| `FILE_NOT_FOUND` | Download requested for a filename that does not exist (maps to JSONResponse with 404 and {"error": "File not found"}). |
+| `VALIDATION_ERROR` | Input validation failed (missing file, wrong form fields or invalid parameters). |
+| `PROCESSING_ERROR` | Server-side error during file save/transcription/LLM processing. |
 
 ---
 
@@ -112,7 +112,7 @@ The following headers are commonly used across all endpoints:
 
 🔄 **Idempotent:** This operation is idempotent - multiple identical requests have the same effect as a single request.
 
-**Description:** This GET endpoint returns a generated DOCX file specified by the path parameter 'filename' and is used to download a previously created Word document.
+**Description:** Returns a generated DOCX file identified by the path parameter filename.
 
 **Request Headers:**
 
@@ -208,7 +208,7 @@ fetch(url, options)
 **Method:** POST
 **Endpoint:** `/upload-audio`
 
-**Description:** Primary purpose: This endpoint accepts an uploaded audio file, runs speech-to-text (using selectable engines), applies post-processing/correction, and returns the corrected transcript plus a generated .
+**Description:** Uploads an audio file, runs speech-to-text (using the specified ASR engine) and post-processes the transcript with an LLM to produce a corrected text and a .
 
 **Request Headers:**
 
@@ -332,7 +332,7 @@ fetch(url, options)
 
 🔄 **Idempotent:** This operation is idempotent - multiple identical requests have the same effect as a single request.
 
-**Description:** Primary Purpose: This GET root endpoint returns a simple JSON status message confirming the Speech-to-Text + Grammar Correction API is running, primarily used as a health/readiness or connectivity check.
+**Description:** Primary purpose: this GET / endpoint serves as a lightweight health/readiness check that returns a brief status message confirming the Speech-to-Text + Grammar Correction API is running.
 
 **Request Headers:**
 
@@ -403,7 +403,7 @@ fetch(url, options)
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 1.0.0 | 2026-03-10 | Initial release with Upload Audio endpoints, Download endpoints |
+| 1.0.0 | 2026-03-13 | Initial release with Upload Audio endpoints, Download endpoints |
 
 ---
 
