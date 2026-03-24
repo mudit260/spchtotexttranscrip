@@ -1,7 +1,7 @@
 # Code API
 
 
-> **API Documentation** | Generated on 2026-03-24 14:45:16
+> **API Documentation** | Generated on 2026-03-24 15:39:01
 
 ---
 
@@ -12,18 +12,19 @@
 ## 1. Overview
 
 * **API Name:** Code API
-* **Purpose / Business Value:** The Code API allows users to upload audio files for processing and download generated DOCX files.
+* **Purpose / Business Value:** The Code API allows users to upload audio files for processing and download generated DOCX files. It supports multiple languages and processing engines.
 * **Base URL:** `None`
 * **API Version:** v1
 * **Supported Formats:** JSON
 * **Detected Frameworks:** Flask
 * **Total Endpoints:** 3
-* **Last Updated:** 2026-03-24 14:45:16
+* **Last Updated:** 2026-03-24 15:39:01
 
 ### Key Features
 
-* Audio file upload and processing
-* Download generated DOCX files
+* Audio file upload
+* Audio processing with specified language and engine
+* File download functionality
 
 ### Endpoint Distribution
 
@@ -44,6 +45,7 @@
 
 * `GET /` - Authentication
 * `POST /upload-audio` - Authentication
+* `GET /download/{filename}` - Authentication
 
 **Example Header:**
 
@@ -59,7 +61,6 @@ The following headers are commonly used across all endpoints:
 
 | Header | Required | Description |
 |:-------|:--------:|:------------|
-| Authorization | Optional | Auth token (not required for this API) |
 | Content-Type | Yes | application/json |
 
 ---
@@ -69,8 +70,8 @@ The following headers are commonly used across all endpoints:
 | Status Code | Meaning |
 |:-----------:|:--------|
 | 200 | Success |
-| 400 | Bad Request |
 | 404 | File not found |
+| 400 | Bad Request |
 
 **Error Response Format:**
 
@@ -86,8 +87,8 @@ The following headers are commonly used across all endpoints:
 
 | Error Code | Description |
 |:----------:|:------------|
-| `VALIDATION_ERROR` | Input validation failed |
 | `FILE_NOT_FOUND` | The requested file does not exist |
+| `VALIDATION_ERROR` | Input validation failed |
 
 ---
 
@@ -326,7 +327,7 @@ fetch(url, options)
 
 🔄 **Idempotent:** This operation is idempotent - multiple identical requests have the same effect as a single request.
 
-**Description:** The root endpoint serves as a health check for the Speech-to-Text + Grammar Correction API, confirming that the service is operational.
+**Description:** The root endpoint serves as a health check for the Speech-to-Text and Grammar Correction API, confirming that the service is operational.
 
 **Request Headers:**
 
@@ -403,7 +404,7 @@ fetch(url, options)
 
 | Header | Description |
 |--------|-------------|
-| `X-RateLimit-Limit` | Total allowed |
+| `X-RateLimit-Limit` | Total allowed requests per minute |
 
 ### Retry Strategy
 
@@ -413,7 +414,7 @@ When rate limited (429 status), wait for the time specified in `Retry-After` hea
 
 ## 7. Versioning Strategy
 
-* **Strategy:** None
+* **Strategy:** URL-based
 * **Current Version:** v1
 
 ### Available Versions
