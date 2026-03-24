@@ -1,7 +1,7 @@
 # Code API
 
 
-> **API Documentation** | Generated on 2026-03-24 15:39:01
+> **API Documentation** | Generated on 2026-03-24 15:49:08
 
 ---
 
@@ -12,19 +12,18 @@
 ## 1. Overview
 
 * **API Name:** Code API
-* **Purpose / Business Value:** The Code API allows users to upload audio files for processing and download generated DOCX files. It supports multiple languages and processing engines.
+* **Purpose / Business Value:** The Code API provides functionality for uploading audio files and downloading generated DOCX files.
 * **Base URL:** `None`
 * **API Version:** v1
 * **Supported Formats:** JSON
 * **Detected Frameworks:** Flask
 * **Total Endpoints:** 3
-* **Last Updated:** 2026-03-24 15:39:01
+* **Last Updated:** 2026-03-24 15:49:08
 
 ### Key Features
 
-* Audio file upload
-* Audio processing with specified language and engine
-* File download functionality
+* Audio file upload with language and engine options
+* Download generated DOCX files
 
 ### Endpoint Distribution
 
@@ -45,7 +44,6 @@
 
 * `GET /` - Authentication
 * `POST /upload-audio` - Authentication
-* `GET /download/{filename}` - Authentication
 
 **Example Header:**
 
@@ -61,6 +59,7 @@ The following headers are commonly used across all endpoints:
 
 | Header | Required | Description |
 |:-------|:--------:|:------------|
+| Authorization | Optional | Auth token (if applicable) |
 | Content-Type | Yes | application/json |
 
 ---
@@ -70,8 +69,8 @@ The following headers are commonly used across all endpoints:
 | Status Code | Meaning |
 |:-----------:|:--------|
 | 200 | Success |
-| 404 | File not found |
 | 400 | Bad Request |
+| 404 | File not found |
 
 **Error Response Format:**
 
@@ -87,8 +86,8 @@ The following headers are commonly used across all endpoints:
 
 | Error Code | Description |
 |:----------:|:------------|
-| `FILE_NOT_FOUND` | The requested file does not exist |
 | `VALIDATION_ERROR` | Input validation failed |
+| `FILE_NOT_FOUND` | The specified file does not exist |
 
 ---
 
@@ -202,6 +201,8 @@ fetch(url, options)
 
 **Method:** POST
 **Endpoint:** `/upload-audio`
+
+🔔 **Webhook:** This endpoint receives webhook callbacks.
 
 **Description:** The /upload-audio endpoint allows users to upload audio files for transcription and processing.
 
