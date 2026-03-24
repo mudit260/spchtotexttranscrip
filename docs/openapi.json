@@ -17,8 +17,8 @@
   "paths": {
     "/": {
       "get": {
-        "summary": "The root endpoint serves as a health check for the Speech-to-Text and Grammar Correction API, confir",
-        "description": "The root endpoint serves as a health check for the Speech-to-Text and Grammar Correction API, confirming that the service is operational. It is primarily used to verify the API's availability and readiness for processing requests. Since this endpoint does not require any input parameters, it is straightforward and efficient, returning a simple success message. There are no specific error scenarios for this endpoint as it is designed to respond with a success message unless the server encounters an internal error. Performance considerations are minimal for this endpoint, as it does not involve complex processing or data retrieval. Security requirements are not explicitly defined in the provided code, indicating that this endpoint may not require authentication, but best practices should be followed to secure the API.",
+        "summary": "The root endpoint serves as a health check for the Speech-to-Text + Grammar Correction API, confirmi",
+        "description": "The root endpoint serves as a health check for the Speech-to-Text + Grammar Correction API, confirming that the service is operational. It is primarily used to verify the availability of the API before making further requests. Since this endpoint does not involve complex processing, it is unlikely to encounter errors; however, if the service is down, a 500 Internal Server Error may occur. There are no pagination or rate limiting considerations evident from the code, and no authentication or authorization is required for access.",
         "operationId": "get_root",
         "tags": [
           "Flask"
@@ -61,7 +61,7 @@
     "/upload-audio": {
       "post": {
         "summary": "The /upload-audio endpoint allows users to upload audio files for transcription and processing. This",
-        "description": "The /upload-audio endpoint allows users to upload audio files for transcription and processing. This endpoint is primarily used in applications that require converting spoken language into text, such as transcription services or voice recognition systems. Common error scenarios include invalid input parameters leading to a 400 Bad Request response, and internal server errors that may occur during file processing, resulting in a 500 Internal Server Error. There are no specific performance considerations such as pagination or rate limiting evident from the code, and no authentication or authorization requirements are specified.",
+        "description": "The /upload-audio endpoint allows users to upload audio files for transcription and processing. This is particularly useful in applications where audio content needs to be converted into text, such as in transcription services or language processing tools. Common error scenarios include invalid input parameters leading to a 400 Bad Request response, and unexpected issues during processing resulting in a 500 Internal Server Error. There are no specific performance considerations like pagination or rate limiting evident from the code, and security requirements are not explicitly defined, suggesting that standard authentication practices should be applied.",
         "operationId": "post_upload_audio",
         "tags": [
           "Flask"
@@ -120,7 +120,7 @@
                 },
                 "example": {
                   "corrected_text": "This is the transcribed text from the audio.",
-                  "docx_file": "transcription.docx"
+                  "docx_file": "transcription_output.docx"
                 }
               }
             }
@@ -142,8 +142,8 @@
     },
     "/download/{filename}": {
       "get": {
-        "summary": "The GET /download/{filename} endpoint allows users to download a DOCX file specified by the filename",
-        "description": "The GET /download/{filename} endpoint allows users to download a DOCX file specified by the filename parameter. This endpoint is particularly useful for retrieving generated documents in a Word format, enabling users to access their files directly. Common error scenarios include attempting to download a file that does not exist, which results in a 404 Not Found response. There are no explicit performance considerations such as pagination or rate limiting evident from the code, and security requirements are not defined in the provided code, suggesting that access control may need to be implemented based on the application's context.",
+        "summary": "The GET /download/{filename} endpoint allows users to download a generated DOCX file by specifying t",
+        "description": "The GET /download/{filename} endpoint allows users to download a generated DOCX file by specifying the filename in the URL. This endpoint is particularly useful for applications that generate reports or documents dynamically and need to provide users with a way to retrieve these files. Common error scenarios include attempting to download a file that does not exist, which results in a 404 Not Found response. There are no evident performance considerations such as pagination or rate limiting in the provided code, and security requirements are not specified, suggesting that access control may need to be implemented based on the application's context.",
         "operationId": "get_download_filename",
         "tags": [
           "Flask"
@@ -169,14 +169,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "example": {
-                  "error": "File not found"
-                }
-              }
-            }
+            "description": "Successful response"
           },
           "400": {
             "description": "Bad Request"
