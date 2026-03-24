@@ -17,8 +17,8 @@
   "paths": {
     "/": {
       "get": {
-        "summary": "Primary purpose: a lightweight root/health endpoint that confirms the Speech-to-Text + Grammar Corre",
-        "description": "Primary purpose: a lightweight root/health endpoint that confirms the Speech-to-Text + Grammar Correction API is running and reachable by returning a simple status message. Business context: call this endpoint for uptime checks, readiness/liveness probes, quick integration tests, or to verify the service before invoking heavier endpoints. Error scenarios: the implementation returns a static success payload so application-level errors are unlikely; however, infrastructure or runtime failures (e.g., framework exceptions, deployment issues, or network problems) could produce 5xx responses — 4xx client errors are not expected for this endpoint. Performance and security: the endpoint is inexpensive and cacheable and does not perform pagination; it can be polled frequently for health checks but should be protected by rate limiting and any organization-level authentication measures in production — no authentication/authorization is evident in the code.",
+        "summary": "The root endpoint serves as a health check for the Speech-to-Text and Grammar Correction API, confir",
+        "description": "The root endpoint serves as a health check for the Speech-to-Text and Grammar Correction API, confirming that the service is operational. It is primarily used to verify the API's availability and readiness for processing requests. Since this endpoint does not require any input parameters, it is straightforward and efficient, returning a simple success message. There are no specific error scenarios for this endpoint as it is designed to respond with a success message unless the server encounters an internal error. Performance considerations are minimal for this endpoint, as it does not involve complex processing or data retrieval. Security requirements are not explicitly defined in the provided code, indicating that this endpoint may not require authentication, but best practices should be followed to secure the API.",
         "operationId": "get_root",
         "tags": [
           "Flask"
@@ -60,8 +60,8 @@
     },
     "/upload-audio": {
       "post": {
-        "summary": "Primary purpose: accepts an uploaded audio file, runs a transcription and post-processing pipeline, ",
-        "description": "Primary purpose: accepts an uploaded audio file, runs a transcription and post-processing pipeline, and returns corrected transcription text plus a generated .docx file. Business context: use this endpoint to convert meeting recordings, interviews, or other audio into cleaned, human-readable text and a downloadable document; language, engine, and llm_engine form fields allow selecting processing parameters. Error scenarios: the endpoint returns a 400 when transcription fails (e.g., empty or unpr",
+        "summary": "The /upload-audio endpoint allows users to upload audio files for transcription and processing. This",
+        "description": "The /upload-audio endpoint allows users to upload audio files for transcription and processing. This endpoint is primarily used in applications that require converting spoken language into text, such as transcription services or voice recognition systems. Common error scenarios include invalid input parameters leading to a 400 Bad Request response, and internal server errors that may occur during file processing, resulting in a 500 Internal Server Error. There are no specific performance considerations such as pagination or rate limiting evident from the code, and no authentication or authorization requirements are specified.",
         "operationId": "post_upload_audio",
         "tags": [
           "Flask"
@@ -119,8 +119,8 @@
                   }
                 },
                 "example": {
-                  "corrected_text": "sample_corrected_text",
-                  "docx_file": "sample_docx_file"
+                  "corrected_text": "This is the transcribed text from the audio.",
+                  "docx_file": "transcription.docx"
                 }
               }
             }
@@ -142,8 +142,8 @@
     },
     "/download/{filename}": {
       "get": {
-        "summary": "Primary Purpose: Returns a generated DOCX file for download when given a filename path parameter; on",
-        "description": "Primary Purpose: Returns a generated DOCX file for download when given a filename path parameter; on success it streams the file with the Word document media type. Business Context: Use this endpoint when a client needs to retrieve a previously generated DOCX (for example, a report or export) by specifying its filename; it is intended for direct file download rather than JSON data. Error Scenarios: If the file does not exist the endpoint returns a 404 with a JSON body containing an \"error\" message; other failures (filesystem or IO errors) would surface as server errors (500) though not explicitly handled in the code. Performance & Security Notes: The implementation streams the file (no pagination) and may serve large payloads — consider rate limiting, response caching, or streaming limits in production; no authentication/authorization is evident in the code, so secure access controls should be added in real deployments. Inferred fields: the request path parameter \"filename\" and the 404 JSON response field \"error\" are inferred from the function code.",
+        "summary": "The GET /download/{filename} endpoint allows users to download a DOCX file specified by the filename",
+        "description": "The GET /download/{filename} endpoint allows users to download a DOCX file specified by the filename parameter. This endpoint is particularly useful for retrieving generated documents in a Word format, enabling users to access their files directly. Common error scenarios include attempting to download a file that does not exist, which results in a 404 Not Found response. There are no explicit performance considerations such as pagination or rate limiting evident from the code, and security requirements are not defined in the provided code, suggesting that access control may need to be implemented based on the application's context.",
         "operationId": "get_download_filename",
         "tags": [
           "Flask"
