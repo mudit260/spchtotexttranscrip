@@ -1,7 +1,7 @@
 # Code API
 
 
-> **API Documentation** | Generated on 2026-03-24 14:17:32
+> **API Documentation** | Generated on 2026-03-24 14:45:16
 
 ---
 
@@ -12,17 +12,17 @@
 ## 1. Overview
 
 * **API Name:** Code API
-* **Purpose / Business Value:** The Code API provides endpoints for uploading audio files and downloading generated DOCX files.
+* **Purpose / Business Value:** The Code API allows users to upload audio files for processing and download generated DOCX files.
 * **Base URL:** `None`
 * **API Version:** v1
 * **Supported Formats:** JSON
 * **Detected Frameworks:** Flask
 * **Total Endpoints:** 3
-* **Last Updated:** 2026-03-24 14:17:32
+* **Last Updated:** 2026-03-24 14:45:16
 
 ### Key Features
 
-* Audio file upload with language and engine options
+* Audio file upload and processing
 * Download generated DOCX files
 
 ### Endpoint Distribution
@@ -59,6 +59,7 @@ The following headers are commonly used across all endpoints:
 
 | Header | Required | Description |
 |:-------|:--------:|:------------|
+| Authorization | Optional | Auth token (not required for this API) |
 | Content-Type | Yes | application/json |
 
 ---
@@ -68,6 +69,7 @@ The following headers are commonly used across all endpoints:
 | Status Code | Meaning |
 |:-----------:|:--------|
 | 200 | Success |
+| 400 | Bad Request |
 | 404 | File not found |
 
 **Error Response Format:**
@@ -84,7 +86,8 @@ The following headers are commonly used across all endpoints:
 
 | Error Code | Description |
 |:----------:|:------------|
-| `FILE_NOT_FOUND` | The requested file does not exist on the server. |
+| `VALIDATION_ERROR` | Input validation failed |
+| `FILE_NOT_FOUND` | The requested file does not exist |
 
 ---
 
@@ -103,7 +106,7 @@ The following headers are commonly used across all endpoints:
 
 🔄 **Idempotent:** This operation is idempotent - multiple identical requests have the same effect as a single request.
 
-**Description:** The GET /download/{filename} endpoint allows users to download a DOCX file specified by the filename parameter.
+**Description:** The GET /download/{filename} endpoint allows users to download a generated DOCX file by specifying the filename in the URL.
 
 **Request Headers:**
 
@@ -323,7 +326,7 @@ fetch(url, options)
 
 🔄 **Idempotent:** This operation is idempotent - multiple identical requests have the same effect as a single request.
 
-**Description:** The root endpoint serves as a health check for the Speech-to-Text and Grammar Correction API, confirming that the service is operational.
+**Description:** The root endpoint serves as a health check for the Speech-to-Text + Grammar Correction API, confirming that the service is operational.
 
 **Request Headers:**
 
@@ -390,7 +393,25 @@ fetch(url, options)
 
 ---
 
-## 6. Versioning Strategy
+## 6. Rate Limiting
+
+**Rate Limiting:** Enabled
+
+* **User:** 100/minute
+
+### Rate Limit Headers
+
+| Header | Description |
+|--------|-------------|
+| `X-RateLimit-Limit` | Total allowed |
+
+### Retry Strategy
+
+When rate limited (429 status), wait for the time specified in `Retry-After` header.
+
+---
+
+## 7. Versioning Strategy
 
 * **Strategy:** None
 * **Current Version:** v1
@@ -401,7 +422,7 @@ fetch(url, options)
 
 ---
 
-## 7. Changelog
+## 8. Changelog
 
 | Version | Date | Changes |
 |---------|------|---------|
